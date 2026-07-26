@@ -4,9 +4,10 @@ def list_iam_users():
     iam_client = boto3.client("iam")
     response = iam_client.list_users()
 
-    users = response["Users"]
+    return response["Users"]
 
-    print(f"IAM users found: {len(users)}")
+def has_mfa_enabled(username):
+    iam_client = boto3.client("iam")
+    response = iam_client.list_mfa_devices(UserName = username)
 
-    for user in users:
-        print(f"- {user['UserName']}")
+    return len(response["MFADevices"]) > 0

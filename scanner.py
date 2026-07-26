@@ -1,5 +1,5 @@
 import boto3
-from checks.iam import list_iam_users
+from checks.iam import list_iam_users, has_mfa_enabled
 
 def main():
     print("\n=================================")
@@ -16,8 +16,18 @@ def main():
     print(f"User ID: {identity['UserId']}")
     print("Setup complete!")
 
+# IAM User Scanning
     print("\nScanning IAM users...")
-    list_iam_users()
+
+    users = list_iam_users()
+
+    print(f"Found {len(users)} IAM users.\n")
+
+    for user in users:
+        if has_mfa_enabled(user["UserName"]):
+            print(f"[PASS] {user['UserName']}: MFA is enabled")
+        else:
+            print(f"[FAIL] {user['UserName']}: MFA is not enabled")
 
 if __name__ == "__main__":
     main()
