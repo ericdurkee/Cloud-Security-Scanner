@@ -1,4 +1,5 @@
 import boto3
+from checks.iam import list_iam_users
 
 def main():
     print("\n=================================")
@@ -13,7 +14,10 @@ def main():
     print(f"Account ID: {identity['Account']}")
     print(f"ARN: {identity['Arn']}")
     print(f"User ID: {identity['UserId']}")
-    print("\nSetup complete!")
+    print("Setup complete!")
+
+    print("\nScanning IAM users...")
+    list_iam_users()
 
 if __name__ == "__main__":
     main()
