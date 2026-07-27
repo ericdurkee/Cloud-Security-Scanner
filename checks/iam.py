@@ -11,3 +11,13 @@ def has_mfa_enabled(username):
     response = iam_client.list_mfa_devices(UserName = username)
 
     return len(response["MFADevices"]) > 0
+
+def has_console_access(username):
+    iam_client = boto3.client("iam")
+
+    try:
+        iam_client.get_login_profile(UserName=username)
+        return True
+    except iam_client.exceptions.NoSuchEntityException:
+        return False
+
