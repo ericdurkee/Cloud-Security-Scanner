@@ -1,5 +1,5 @@
 import boto3
-from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys)
+from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys,has_admin_access)
 
 def main():
     print("\n=================================")
@@ -37,14 +37,27 @@ def main():
 
         access_keys = list_access_keys(user["UserName"])
         for key in access_keys:
-            print(f"[INFO] {user['UserName']}: " f"Access Key {key['AccessKeyId']} is {key['Status']}\n")
+            print(f"[INFO] {user['UserName']}: " f"Access Key {key['AccessKeyId']} is {key['Status']}")
 
         key_date = key_creation_date(key['CreateDate'])
         if key_date > 90:
-            print(f"[FAIL] {key['AccessKeyId']} for user {user['UserName']} is older than 90 days ({key_date} days old)")
-
+            status = "FAIL"
+            message = "older than 90 days"
         else:
-            print(f"[PASS] {key['AccessKeyId']} for user {user['UserName']} is less than 90 days old ({key_date} days old)")
+            status = "PASS"
+            message = "less than 90 days"
+        print(f"[{status}] Access Key {key['AccessKeyId']} for user "f"{user['UserName']} is {message} ({key_date} days old)")
+
+        has_admin = has_admin_access(user['UserName'])
+        if has_admin == True:
+            status = "PASS"
+            message = "User has administrative privelages"
+        else:
+            status = "FAIL"
+            message = "User does not have administrative privelages"
+        print(f"[{status}] {message}")
+
+
 
 if __name__ == "__main__":
     main()

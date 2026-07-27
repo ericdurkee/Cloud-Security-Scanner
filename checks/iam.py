@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from urllib import response
 import boto3
 
 def list_iam_users():
@@ -29,8 +28,19 @@ def list_access_keys(username):
     return response["AccessKeyMetadata"]
 
 def key_creation_date(CreateDate):
-    current_time = datetime.now(datetime.timezone.utc)
+    current_time = datetime.now(timezone.utc)
     difference = current_time - CreateDate
     return difference.days
+
+def has_admin_access(username):
+    iam_client = boto3.client("iam")
+    response = iam_client.list_attached_user_policies(UserName=username)
+    policies = response["AttachedPolicies"]
+
+    for policy in policies:
+        if policy["PolicyName"] == "AdministratorAccess":
+            return True
+    return False
+
 
 
