@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+from urllib import response
 import boto3
 
 def list_iam_users():
@@ -20,4 +22,15 @@ def has_console_access(username):
         return True
     except iam_client.exceptions.NoSuchEntityException:
         return False
+
+def list_access_keys(username):
+    iam_client = boto3.client("iam")
+    response = iam_client.list_access_keys(UserName=username)
+    return response["AccessKeyMetadata"]
+
+def key_creation_date(CreateDate):
+    current_time = datetime.now(datetime.timezone.utc)
+    difference = current_time - CreateDate
+    return difference.days
+
 
