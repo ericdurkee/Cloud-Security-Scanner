@@ -1,5 +1,6 @@
 import boto3
 from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage)
+from datetime import datetime, timezone
 
 def main():
     print("\n=================================")
@@ -57,8 +58,15 @@ def main():
                 status = "FAIL"
                 message = "Access key has never been used"
             else:
-                status = "PASS"
-                message = f"Access key was last used on {last_used.date()}"
+                current_time = datetime.now(timezone.utc)
+                difference = current_time - last_used
+                days_since_used = difference.days
+                if days_since_used > 90:
+                    status = "FAIL"
+                    message = f"Access key has not been used in {days_since_used} days"
+                else:
+                    status = "PASS"
+                    messgae = f"Access key was used {days_since_used} days ago"
             print(f"[{status}] {message}")
 
         has_admin = has_admin_access(user["UserName"])
