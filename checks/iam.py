@@ -54,5 +54,9 @@ def active_key_count(access_keys):
             active_count += 1
     return active_count
 
-
+def inline_policy_count(username):
+    iam_client = boto3.client("iam")
+    response = iam_client.list_user_policies(UserName=username)
+    policies = response["PolicyNames"]
+    return len(policies)
 

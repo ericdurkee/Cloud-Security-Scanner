@@ -1,5 +1,5 @@
 import boto3
-from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count)
+from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count)
 from datetime import datetime, timezone
 
 def main():
@@ -50,8 +50,7 @@ def main():
                 message = "less than 90 days"
             print(
                 f"[{status}] Access Key {key['AccessKeyId']} for user "
-                f"{user['UserName']} is {message} ({key_date} day(s) old)"
-            )
+                f"{user['UserName']} is {message} ({key_date} day(s) old)")
 
             last_used = get_last_key_usage(key["AccessKeyId"])
             if last_used is None:
@@ -78,6 +77,19 @@ def main():
                     status = "PASS"
                     message = f"User has {active_keys} active access key"
                 print(f"[{status}] {message}")
+
+            inline_policy = inline_policy_count(user["UserName"])
+            if inline_policy > 0:
+                status = "FAIL"
+                message = f"User has {inline_policy} inline polic"
+                if inline_policy == 1:
+                    message += "y"
+                else:
+                    message += "ies"
+            else:
+                status = "PASS"
+                message = "User has no inline policies"
+            print(f"[{status}] {message}")
 
         has_admin = has_admin_access(user["UserName"])
         if has_admin:
