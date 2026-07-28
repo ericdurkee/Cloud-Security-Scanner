@@ -42,5 +42,12 @@ def has_admin_access(username):
             return True
     return False
 
+def get_last_key_usage(access_key_id):
+    iam_client = boto3.client("iam")
+    response = iam_client.get_access_key_last_used(AccessKeyId=access_key_id)
+    return response["AccessKeyLastUsed"].get("LastUsedDate")
+
+
+
 
 
