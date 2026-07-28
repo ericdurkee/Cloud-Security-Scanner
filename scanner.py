@@ -1,5 +1,5 @@
 import boto3
-from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage)
+from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count)
 from datetime import datetime, timezone
 
 def main():
@@ -50,7 +50,7 @@ def main():
                 message = "less than 90 days"
             print(
                 f"[{status}] Access Key {key['AccessKeyId']} for user "
-                f"{user['UserName']} is {message} ({key_date} days old)"
+                f"{user['UserName']} is {message} ({key_date} day(s) old)"
             )
 
             last_used = get_last_key_usage(key["AccessKeyId"])
@@ -66,8 +66,18 @@ def main():
                     message = f"Access key has not been used in {days_since_used} days"
                 else:
                     status = "PASS"
-                    messgae = f"Access key was used {days_since_used} days ago"
+                    message = f"Access key was used {days_since_used} days ago"
             print(f"[{status}] {message}")
+
+            active_keys = active_key_count(access_keys)
+            for key in access_keys:
+                if active_keys > 1:
+                    status = "FAIL"
+                    message = f"User has {active_keys} active access key"
+                else:
+                    status = "PASS"
+                    message = f"User has {active_keys} active access key"
+                print(f"[{status}] {message}")
 
         has_admin = has_admin_access(user["UserName"])
         if has_admin:

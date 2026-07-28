@@ -47,7 +47,12 @@ def get_last_key_usage(access_key_id):
     response = iam_client.get_access_key_last_used(AccessKeyId=access_key_id)
     return response["AccessKeyLastUsed"].get("LastUsedDate")
 
-
+def active_key_count(access_keys):
+    active_count = 0
+    for key in access_keys:
+        if key["Status"] == "Active":
+            active_count += 1
+    return active_count
 
 
 
