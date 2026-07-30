@@ -1,5 +1,6 @@
 import boto3
-from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count)
+from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count,
+get_account_summary, root_mfa_enabled, root_access_keys_present)
 from datetime import datetime, timezone
 
 def main():
@@ -99,6 +100,23 @@ def main():
             status = "PASS"
             message = "User does not have administrative privileges"
         print(f"[{status}] {message}")
+
+        #Root User Checks
+        print("=== Root Account Checks ===")
+        get_summary = get_account_summary()
+        root_mfa = root_mfa_enabled()
+        root_keys = root_access_keys_present()
+        if root_mfa:
+            status = "PASS"
+            message = "Root user has mfa enabled"
+        if root_keys :
+            status = "PASS"
+            message = "Root user has root keys enabled"
+        else:
+            status = "FAIL"
+            message = "Root user has no mfa enabled or root keys"
+        print(f"[{status}] {message}")
+
 
 if __name__ == "__main__":
     main()

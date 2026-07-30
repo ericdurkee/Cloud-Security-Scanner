@@ -60,3 +60,16 @@ def inline_policy_count(username):
     policies = response["PolicyNames"]
     return len(policies)
 
+def get_account_summary():
+    iam_client = boto3.client("iam")
+    response = iam_client.get_account_summary()
+    summary = response["SummaryMap"]
+    return summary
+
+def root_mfa_enabled():
+    summary = get_account_summary()
+    return summary["AccountMFAEnabled"] == 1
+
+def root_access_keys_present():
+    summary = get_account_summary()
+    return summary["AccountAccessKeysPresent"] == 1
