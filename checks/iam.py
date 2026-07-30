@@ -73,3 +73,41 @@ def root_mfa_enabled():
 def root_access_keys_present():
     summary = get_account_summary()
     return summary["AccountAccessKeysPresent"] == 1
+
+def get_password_policy():
+    iam_client = boto3.client("iam")
+    try:
+        response = iam_client.get_account_password_policy()
+        return response["PasswordPolicy"]
+    except iam_client.exceptions.NoSuchEntityException:
+        return None
+
+def minimum_length():
+    policy = get_password_policy()
+    if policy is None:
+        return None
+    return policy["MinimumPasswordLength"]
+
+def require_symbols(): #since the output is a boolian and not a int does this change how we define this function?
+    policy = get_password_policy()
+    if policy is None:
+        return None
+    return policy["RequireSymbols"]
+
+def require_numbers():
+    policy = get_password_policy()
+    if policy is None:
+        return None
+    return policy["RequireNumbers"]
+
+def require_uppercase():
+    policy = get_password_policy()
+    if policy is None:
+        return None
+    return policy["RequireUppercaseCharacters"]
+
+def require_lowercase():
+    policy = get_password_policy()
+    if policy is None:
+        return None
+    return policy["RequireLowercaseCharacters"]

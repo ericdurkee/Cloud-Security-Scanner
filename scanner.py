@@ -1,6 +1,6 @@
 import boto3
 from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count,
-get_account_summary, root_mfa_enabled, root_access_keys_present)
+get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase)
 from datetime import datetime, timezone
 
 def main():
@@ -99,23 +99,41 @@ def main():
         else:
             status = "PASS"
             message = "User does not have administrative privileges"
-        print(f"[{status}] {message}")
+        print(f"[{status}] {message}\n")
 
         #Root User Checks
-        print("=== Root Account Checks ===")
-        get_summary = get_account_summary()
+        print("=== Root Account Checks ===\n")
         root_mfa = root_mfa_enabled()
+
         root_keys = root_access_keys_present()
+        if root_keys:
+            status = "FAIL"
+            message = "Root access keys are present"
+        else:
+            status = "PASS"
+            message = "No root access keys are present"
+        print(f"[{status}] {message}")
+
+        root_mfa = root_mfa_enabled()
         if root_mfa:
             status = "PASS"
-            message = "Root user has mfa enabled"
-        if root_keys :
-            status = "PASS"
-            message = "Root user has root keys enabled"
+            message = "Root user has mfa enabled\n"
         else:
             status = "FAIL"
-            message = "Root user has no mfa enabled or root keys"
+            message = "Root user has no mfa enabled\n"
         print(f"[{status}] {message}")
+
+        #Password Check
+        print("=== Password Policy ===\n")
+        password_policy = get_password_policy()
+
+        minimum_length_value = minimum_length()
+        if minimum_length_value is None:
+            print("Minimum password length not met")
+        else:
+            print("Minimum password length met")
+
+
 
 
 if __name__ == "__main__":
