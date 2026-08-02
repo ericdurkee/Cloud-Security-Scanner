@@ -1,6 +1,6 @@
 import boto3
 from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count,
-get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase)
+get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase, max_password_age)
 from datetime import datetime, timezone
 
 def main():
@@ -129,12 +129,53 @@ def main():
 
         minimum_length_value = minimum_length()
         if minimum_length_value is None:
-            print("Minimum password length not met")
+            print("[FAIL] No account password policy exists")
+        elif minimum_length_value >= 14:
+            print(f"[PASS] Minimum password length is {minimum_length_value}")
         else:
-            print("Minimum password length met")
+            print(f"[FAIL] Minimum password length is only {minimum_length_value}; "
+            "recommended minimum is 14")
 
+        symbols_required = require_symbols()
+        if symbols_required is None:
+            print("[FAIL] No account password policy exists")
+        elif symbols_required:
+            print("[PASS] Passwords require a symbol")
+        else:
+            print("[FAIL] Passwords do not require symbols")
 
+        numbers_required = require_numbers()
+        if numbers_required is None:
+            print("[FAIL] No account password policy exists")
+        elif numbers_required:
+            print("[PASS] Passwords require a number")
+        else:
+            print("[FAIL] Passwords do not require numbers")
 
+        uppercase_requires = require_uppercase()
+        if uppercase_requires is None:
+            print("[FAIL] No account password policy exists")
+        elif uppercase_requires:
+             print("[PASS] Passwords require an uppercase character")
+        else:
+            print("[FAIL] Passwords do not require uppercase characters")
+
+        lowercase_requires = require_lowercase()
+        if lowercase_requires is None:
+            print("[FAIL] No account password policy exists")
+        elif lowercase_requires:
+            print("[PASS] Passwords require a lowercase character")
+        else:
+            print("[FAIL] Passwords do not require lowercase characters")
+
+        password_age_maximum = max_password_age()
+        if password_age_maximum is None:
+            print("[FAIL] No account password policy exists")
+        elif password_age_maximum >= 14:
+            print(f"[PASS] Maximum password length is {password_age_maximum}")
+        else:
+            print(f"[FAIL] Maximum password length is {password_age_maximum}; "
+                        "recommended maximum is 14")
 
 if __name__ == "__main__":
     main()

@@ -88,7 +88,7 @@ def minimum_length():
         return None
     return policy["MinimumPasswordLength"]
 
-def require_symbols(): #since the output is a boolian and not a int does this change how we define this function?
+def require_symbols():
     policy = get_password_policy()
     if policy is None:
         return None
@@ -111,3 +111,9 @@ def require_lowercase():
     if policy is None:
         return None
     return policy["RequireLowercaseCharacters"]
+
+def max_password_age():
+    policy = get_password_policy()
+    if policy is None:
+        return None
+    return policy["MaxPasswordAge"]
