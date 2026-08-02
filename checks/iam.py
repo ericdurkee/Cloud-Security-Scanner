@@ -116,4 +116,4 @@ def max_password_age():
     policy = get_password_policy()
     if policy is None:
         return None
-    return policy["MaxPasswordAge"]
+    return policy.get("MaxPasswordAge")

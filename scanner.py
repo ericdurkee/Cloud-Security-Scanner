@@ -170,12 +170,11 @@ def main():
 
         password_age_maximum = max_password_age()
         if password_age_maximum is None:
-            print("[FAIL] No account password policy exists")
-        elif password_age_maximum >= 14:
-            print(f"[PASS] Maximum password length is {password_age_maximum}")
+            print("[FAIL] Password expiration is not enabled")
+        elif password_age_maximum <= 90:
+            print(f"[PASS] Maximum password age is {password_age_maximum} days")
         else:
-            print(f"[FAIL] Maximum password length is {password_age_maximum}; "
-                        "recommended maximum is 14")
+            print(f"[FAIL] Maximum password age is {password_age_maximum} days")
 
 if __name__ == "__main__":
     main()
