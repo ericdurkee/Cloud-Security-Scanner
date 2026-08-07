@@ -1,6 +1,7 @@
 import boto3
 from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count,
-get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase, max_password_age)
+get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase, max_password_age,
+days_since_password_use)
 from datetime import datetime, timezone
 
 def main():
@@ -175,6 +176,14 @@ def main():
             print(f"[PASS] Maximum password age is {password_age_maximum} days")
         else:
             print(f"[FAIL] Maximum password age is {password_age_maximum} days")
+
+        days = days_since_password_use(user)
+        if days is None:
+            print("[INFO] User has never logged in or has no console password")
+        elif days > 90:
+            print(f"[FAIL] Password was last used {days} days ago")
+        else:
+            print(f"[PASS] Password was last used {days} days ago")
 
 if __name__ == "__main__":
     main()

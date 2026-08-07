@@ -117,3 +117,14 @@ def max_password_age():
     if policy is None:
         return None
     return policy.get("MaxPasswordAge")
+
+def password_last_used(user):
+    return user.get("PasswordLastUsed")
+
+def days_since_password_use(user):
+    last_used = password_last_used(user)
+    if last_used is None:
+        return None
+    current_time = datetime.now(timezone.utc)
+    difference = current_time - last_used
+    return difference.days
