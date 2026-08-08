@@ -2,6 +2,7 @@ import boto3
 from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count,
 get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase, max_password_age,
 days_since_password_use)
+from checks.s3 import (list_buckets, is_bucket_public, is_versioning_enabled, is_encryption_enabled, is_logging_enabled, has_lifecycle_rules, is_bucket_policy_public)
 from datetime import datetime, timezone
 
 def main():
@@ -184,6 +185,52 @@ def main():
             print(f"[FAIL] Password was last used {days} days ago")
         else:
             print(f"[PASS] Password was last used {days} days ago")
+
+#S3 bucket checks
+        print("\n=== S3 Bucket Checks ===")
+        buckets = list_buckets()
+        print(f"Found {len(buckets)} bucket(S)")
+        for bucket in buckets:
+            print(bucket["Name"])
+
+        for bucket in buckets:
+            print(f"\nBucket: {bucket['Name']}")
+
+            is_public = is_bucket_public(bucket["Name"])
+            if is_public:
+                print("[FAIL] Bucket is publicly accessible")
+            else:
+                print("[PASS] Bucket is not publicly accessible")
+
+            versioning_enabled = is_versioning_enabled(bucket["Name"])
+            if versioning_enabled:
+                print("[PASS] Bucket versioning is enabled")
+            else:
+                print("[FAIL] Bucket versioning is not enabled")
+
+            encryption_enabled = is_encryption_enabled(bucket["Name"])
+            if encryption_enabled:
+                print("[PASS] Bucket encryption is enabled")
+            else:
+                print("[FAIL] Bucket encryption is not enabled")
+
+            logging_enabled = is_logging_enabled(bucket["Name"])
+            if logging_enabled:
+                print("[PASS] Bucket logging is enabled")
+            else:
+                print("[FAIL] Bucket logging is not enabled")
+
+            lifecycle_enabled = has_lifecycle_rules(bucket["Name"])
+            if lifecycle_enabled:
+                print("[PASS] Bucket has an enabled lifecycle rule")
+            else:
+                print("[FAIL] Bucket has no enabled lifecycle rules")
+
+            policy_public = is_bucket_policy_public(bucket["Name"])
+            if policy_public:
+                print("[FAIL] Bucket policy allows public access")
+            else:
+                print("[PASS] Bucket policy is not public")
 
 if __name__ == "__main__":
     main()
