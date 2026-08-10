@@ -60,7 +60,6 @@ def is_bucket_policy_public(bucket_name):
         return False
 
 def is_bucket_acl_public(bucket_name):
-    grants = response["Grants"]
     s3_client = boto3.client("s3")
     try:
         response = s3_client.get_bucket_acl(Bucket=bucket_name)
@@ -68,7 +67,7 @@ def is_bucket_acl_public(bucket_name):
         for grant in grants:
             grantee = grant["Grantee"]
             uri = grantee.get("URI", "")
-            if uri.endwith("AllUsers") or uri.endswith("AuthenticatedUsers"):
+            if uri.endswith("AllUsers") or uri.endswith("AuthenticatedUsers"):
                 return True
         return False
     except ClientError:
