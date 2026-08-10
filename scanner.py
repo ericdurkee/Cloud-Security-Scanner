@@ -2,7 +2,7 @@ import boto3
 from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_console_access, list_access_keys, has_admin_access, get_last_key_usage, active_key_count, inline_policy_count,
 get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase, max_password_age,
 days_since_password_use)
-from checks.s3 import (list_buckets, is_bucket_public, is_versioning_enabled, is_encryption_enabled, is_logging_enabled, has_lifecycle_rules, is_bucket_policy_public)
+from checks.s3 import (list_buckets, is_bucket_public, is_versioning_enabled, is_encryption_enabled, is_logging_enabled, has_lifecycle_rules, is_bucket_policy_public, is_bucket_acl_public)
 from datetime import datetime, timezone
 
 def main():
@@ -231,6 +231,12 @@ def main():
                 print("[FAIL] Bucket policy allows public access")
             else:
                 print("[PASS] Bucket policy is not public")
+
+            acl_public = is_bucket_acl_public(bucket["Name"])
+            if acl_public:
+                print("[FAIL] Bucket ACL allows public access")
+            else:
+                print("[PASS] Bucket ACL does not allow public access")
 
 if __name__ == "__main__":
     main()
