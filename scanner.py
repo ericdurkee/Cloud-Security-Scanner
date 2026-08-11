@@ -3,6 +3,7 @@ from checks.iam import (key_creation_date, list_iam_users, has_mfa_enabled, has_
 get_account_summary, root_mfa_enabled, root_access_keys_present, get_password_policy, minimum_length, require_symbols, require_numbers, require_uppercase, require_lowercase, max_password_age,
 days_since_password_use)
 from checks.s3 import (list_buckets, is_bucket_public, is_versioning_enabled, is_encryption_enabled, is_logging_enabled, has_lifecycle_rules, is_bucket_policy_public, is_bucket_acl_public)
+from checks.ec2 import (list_security_groups, is_sensitive_port_public)
 from datetime import datetime, timezone
 
 def main():
@@ -237,6 +238,19 @@ def main():
                 print("[FAIL] Bucket ACL allows public access")
             else:
                 print("[PASS] Bucket ACL does not allow public access")
+
+        #EC2 Checks
+        print("\n=== EC2 Checks ===")
+        security_groups = list_security_groups()
+        print(f"Found {len(security_groups)} security group(s)")
+
+        for group in security_groups:
+            print(f"\nSecurity Group: {group['GroupName']}")
+            sensitive_port_public = is_sensitive_port_public(group)
+            if sensitive_port_public:
+                print("[FAIL] Security group exposes SSH or RDP to the internet")
+            else:
+                print("[PASS] Security group does not expose SSH or RDP to the internet")
 
 if __name__ == "__main__":
     main()
