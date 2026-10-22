@@ -24,7 +24,7 @@ from reporter import save_scan_report
 from datetime import datetime, timezone
 from colorama import init, Fore, Style
 init(autoreset=True)
-from reporter import save_scan_report, print_risk_table
+from reporter import save_scan_report, print_risk_table, save_html_report
 
 def main():
     print("\n=================================")
@@ -447,9 +447,26 @@ def main():
     print(f"Low Findings: {Fore.YELLOW}{low_fails}{Style.RESET_ALL}")
     print(f"Informational Findings: {Fore.BLUE}{total_info}{Style.RESET_ALL}")
     print("========================================\n")
-        
+    
+    totals_dict = {
+        "passes": total_passes,
+        "critical": critical_fails,
+        "high": high_fails,
+        "medium": medium_fails,
+        "low": low_fails
+    }
+    
     save_scan_report(scan_results)
     print_risk_table(total_passes, critical_fails, high_fails, medium_fails, low_fails, total_info, len(target_regions))
+    save_html_report(scan_results, totals_dict)
+
+    totals_dict = {
+        "passes": total_passes,
+        "critical": critical_fails,
+        "high": high_fails,
+        "medium": medium_fails,
+        "low": low_fails
+    }
 
 if __name__ == "__main__":
     main()
