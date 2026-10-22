@@ -1,7 +1,7 @@
 import boto3
 
 def list_security_groups():
-    ec2_client = boto3.client("ec2")
+    ec2_client = boto3.client("ec2", region_name="us-east-1")
     response = ec2_client.describe_security_groups()
     return response["SecurityGroups"]
 

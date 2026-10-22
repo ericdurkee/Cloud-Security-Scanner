@@ -1,0 +1,12 @@
+{
+    "scan_timestamp": "2026-10-22T18:34:41.988594+00:00",
+    "results": {
+        "iam_users": [],
+        "root_account": {},
+        "password_policy": {},
+        "s3_buckets": [],
+        "security_groups": [],
+        "rds_instances": [],
+        "cloudtrail": {}
+    }
+}
