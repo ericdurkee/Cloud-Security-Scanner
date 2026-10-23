@@ -20,6 +20,18 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS findings (
+            findings_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            scan_id INTEGER,
+            resource_name TEXT,
+            check_name TEXT,
+            status TEXT,
+            severity TEXT,
+            FOREIGN KEY (scan_id) REFERENCES scans (scan_id)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
