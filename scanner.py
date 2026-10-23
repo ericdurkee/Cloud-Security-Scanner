@@ -418,11 +418,6 @@ def main():
                 "db_identifier": db_identifier,
                 "publicly_accessible": is_public
             })
-
-            scan_results["rds_instances"].append({
-            "db_identifier": db_identifier,
-            "publicly_accessible": is_rds_publicly_accessible(db)
-        })
         
         #CloudTrail Checks
         print("\n=== CloudTrail Checks ===")
@@ -459,14 +454,6 @@ def main():
     save_scan_report(scan_results)
     print_risk_table(total_passes, critical_fails, high_fails, medium_fails, low_fails, total_info, len(target_regions))
     save_html_report(scan_results, totals_dict)
-
-    totals_dict = {
-        "passes": total_passes,
-        "critical": critical_fails,
-        "high": high_fails,
-        "medium": medium_fails,
-        "low": low_fails
-    }
 
 if __name__ == "__main__":
     main()
