@@ -1,5 +1,6 @@
 import boto3
 import argparse
+import os
 
 def get_enabled_regions():
     ec2_client = boto3.client("ec2", region_name="us-east-1")
@@ -25,6 +26,7 @@ from datetime import datetime, timezone
 from colorama import init, Fore, Style
 init(autoreset=True)
 from reporter import save_scan_report, print_risk_table, save_html_report
+from utils.notifier import send_discord_alert
 
 def main():
     print("\n=================================")
@@ -454,6 +456,23 @@ def main():
     save_scan_report(scan_results)
     print_risk_table(total_passes, critical_fails, high_fails, medium_fails, low_fails, total_info, len(target_regions))
     save_html_report(scan_results, totals_dict)
+
+    total_checks_count = total_passes + critical_fails + high_fails + medium_fails + low_fails
+    
+    scan_summary = {
+        "total": total_checks_count,
+        "passed": total_passes,
+        "critical": critical_fails,
+        "high": high_fails,
+        "medium": medium_fails,
+        "low": low_fails
+    }
+
+    #Discord alert
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/1563240654765826211/L5sKAKAJScwFFYwXQ9LwWz6rr4Qg7WBloFriRbjyIByCfMIi43j5kCBom1DbhGILZ60K")
+    
+    send_discord_alert(webhook_url, scan_summary)
+    print("[+] Scan complete and notification sent!")
 
 if __name__ == "__main__":
     main()

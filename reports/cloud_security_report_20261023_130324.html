@@ -1,0 +1,78 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Cloud Security Executive Dashboard</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+            .container { max-width: 1100px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            h1 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+            h2 { color: #34495e; margin-top: 30px; }
+            .summary-cards { display: flex; gap: 15px; margin-bottom: 30px; }
+            .card { flex: 1; background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border-left: 5px solid #bdc3c7; }
+            .card.pass { border-left-color: #2ecc71; }
+            .card.critical { border-left-color: #e74c3c; }
+            .card.high { border-left-color: #d35400; }
+            .card.medium { border-left-color: #f1c40f; }
+            .card.low { border-left-color: #3498db; }
+            .card h3 { margin: 0; font-size: 14px; color: #7f8c8d; }
+            .card p { margin: 10px 0 0 0; font-size: 24px; font-weight: bold; color: #2c3e50; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; font-size: 14px; }
+            th { background-color: #f8f9fa; color: #2c3e50; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Cloud Security Executive Dashboard</h1>
+            <p>Generated on: 2026-10-23 13:03:24</p>
+            
+            <div class="summary-cards">
+                <div class="card pass"><h3>Passed</h3><p>19</p></div>
+                <div class="card critical"><h3>Critical</h3><p>0</p></div>
+                <div class="card high"><h3>High</h3><p>1</p></div>
+                <div class="card medium"><h3>Medium</h3><p>5</p></div>
+                <div class="card low"><h3>Low</h3><p>3</p></div>
+            </div>
+    
+            <h2>IAM Users Audit</h2>
+            <table>
+                <tr><th>Username</th><th>Console Access</th><th>MFA Enabled</th><th>Active Keys</th><th>Admin Access</th></tr>
+    
+                <tr>
+                    <td>cloud-scanner</td>
+                    <td>False</td>
+                    <td>False</td>
+                    <td>2</td>
+                    <td>False</td>
+                </tr>
+        </table>
+            <h2>S3 Storage Security</h2>
+            <table>
+                <tr><th>Bucket Name</th><th>Public</th><th>Versioning</th><th>Encryption</th><th>Logging</th></tr>
+    
+                <tr>
+                    <td>cloud-security-scanner-test-48291</td>
+                    <td>False</td>
+                    <td>False</td>
+                    <td>True</td>
+                    <td>False</td>
+                </tr>
+        </table>
+            <h2>Security Groups (Inbound Risk)</h2>
+            <table>
+                <tr><th>Security Group Name</th><th>Exposes SSH/RDP</th></tr>
+    
+                <tr>
+                    <td>default</td>
+                    <td>False</td>
+                </tr>
+        </table>
+            <h2>RDS Database Instances</h2>
+            <table>
+                <tr><th>Database Identifier</th><th>Publicly Accessible</th></tr>
+    </table>
+        </div>
+    </body>
+    </html>
+    

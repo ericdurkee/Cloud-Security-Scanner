@@ -1,0 +1,50 @@
+{
+    "scan_timestamp": "2026-10-23T18:17:37.807638+00:00",
+    "results": {
+        "iam_users": [
+            {
+                "username": "cloud-scanner",
+                "console_access": false,
+                "mfa_enabled": false,
+                "active_access_keys": 2,
+                "inline_policies": 0,
+                "admin_access": false
+            }
+        ],
+        "root_account": {
+            "root_access_keys_present": false,
+            "root_mfa_enabled": true
+        },
+        "password_policy": {
+            "minimum_length": 14,
+            "require_symbols": true,
+            "require_numbers": true,
+            "require_uppercase": true,
+            "require_lowercase": true,
+            "max_password_age": null
+        },
+        "s3_buckets": [
+            {
+                "bucket_name": "cloud-security-scanner-test-48291",
+                "is_public": false,
+                "versioning_enabled": false,
+                "encryption_enabled": true,
+                "logging_enabled": false,
+                "lifecycle_rules": false,
+                "policy_public": false,
+                "acl_public": false
+            }
+        ],
+        "security_groups": [
+            {
+                "group_name": "default",
+                "sensitive_port_public": false
+            }
+        ],
+        "rds_instances": [],
+        "cloudtrail": {
+            "Enabled": false,
+            "Reason": "No trails configured"
+        }
+    }
+}

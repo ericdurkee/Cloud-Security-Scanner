@@ -13,9 +13,24 @@ def send_discord_alert(webhook_url, scan_summary):
     has_criticals = scan_summary.get("critical", 0) > 0 or scan_summary.get("high", 0) > 0
     embed_color = 15158332 if has_criticals else 3066993
 
+    raw_total = scan_summary.get("total")
+    if raw_total is None:
+        raw_total = (
+            scan_summary.get("passed", 0) +
+            scan_summary.get("critical", 0) +
+            scan_summary.get("high", 0) +
+            scan_summary.get("medium", 0) +
+            scan_summary.get("low", 0)
+        )
+    total_checked = str(raw_total)
+    passed_count = str(scan_summary.get("passed", 0))
+    critical_count = str(scan_summary.get("critical", 0))
+    high_count = str(scan_summary.get("high", 0))
+    medium_count = str(scan_summary.get("medium", 0))
+    low_count = str(scan_summary.get("low", 0))
+
     payload = {
         "username": "Cloud Security Scanner",
-        "avatar_url": "https://img.icons8.com/color/96/amazon-web-services.png",
         "embeds": [
             {
                 "title": "Cloud Security Audit Completed",
@@ -36,7 +51,7 @@ def send_discord_alert(webhook_url, scan_summary):
     req = urllib.request.Request(
         webhook_url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "applications/json", "User-Agent": "SecurityScannerBot"}
+        headers={"Content-Type": "application/json", "User-Agent": "SecurityScannerBot"}
     )
 
     try:
