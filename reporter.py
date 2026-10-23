@@ -43,51 +43,79 @@ def save_scan_report(scan_results):
         json.dump(report_data, f, indent=4)
     print(f"\n[{Fore.BLUE}INFO{Style.RESET_ALL}] Scan report successfully saved to {filename}")
 
-def save_html_report(scan_results, totals):
-    os.makedirs("reports", exist_ok=True)
+def save_html_report(scan_results, totals_dict, filename_prefix="reports/cloud_security_report"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    html_filename = f"reports/cloud_security_report_{timestamp}.html"
+    filename = f"{filename_prefix}_{timestamp}.html"
+    
+    # Calculate overall risk scores or fetch stats
+    passes = totals_dict.get("passes", 0)
+    critical = totals_dict.get("critical", 0)
+    high = totals_dict.get("high", 0)
+    medium = totals_dict.get("medium", 0)
+    low = totals_dict.get("low", 0)
 
     html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Cloud Security Risk Assessment</title>
+        <title>Cloud Security Executive Dashboard</title>
         <style>
-            body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }}
-            .container {{ max-width: 1000px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
-            h1 {{ color: #007acc; }}
-            h2 {{ color: #333; border-bottom: 2px solid #007acc; padding-bottom: 5px; margin-top: 30px; }}
-            .summary-box {{ display: flex; gap: 15px; margin-bottom: 25px; }}
-            .card {{ flex: 1; padding: 15px; border-radius: 6px; color: white; text-align: center; font-weight: bold; }}
-            .pass {{ background-color: #28a745; }}
-            .critical {{ background-color: #dc3545; }}
-            .high {{ background-color: #e83e8c; }}
-            .medium {{ background-color: #fd7e14; }}
-            .low {{ background-color: #ffc107; color: #333; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; }}
-            th, td {{ padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 14px; }}
-            th {{ background-color: #007acc; color: white; }}
+            body {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}
+            .container {{ max-width: 1100px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+            h1 {{ color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }}
+            h2 {{ color: #34495e; margin-top: 30px; }}
+            .summary-cards {{ display: flex; gap: 15px; margin-bottom: 30px; }}
+            .card {{ flex: 1; background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border-left: 5px solid #bdc3c7; }}
+            .card.pass {{ border-left-color: #2ecc71; }}
+            .card.critical {{ border-left-color: #e74c3c; }}
+            .card.high {{ border-left-color: #d35400; }}
+            .card.medium {{ border-left-color: #f1c40f; }}
+            .card.low {{ border-left-color: #3498db; }}
+            .card h3 {{ margin: 0; font-size: 14px; color: #7f8c8d; }}
+            .card p {{ margin: 10px 0 0 0; font-size: 24px; font-weight: bold; color: #2c3e50; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }}
+            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; font-size: 14px; }}
+            th {{ background-color: #f8f9fa; color: #2c3e50; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>Cloud Security Risk Assessment</h1>
-            <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            <h1>Cloud Security Executive Dashboard</h1>
+            <p>Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
             
-            <div class="summary-box">
-                <div class="card pass">Passed<br>{totals['passes']}</div>
-                <div class="card critical">Critical<br>{totals['critical']}</div>
-                <div class="card high">High<br>{totals['high']}</div>
-                <div class="card medium">Medium<br>{totals['medium']}</div>
-                <div class="card low">Low<br>{totals['low']}</div>
+            <div class="summary-cards">
+                <div class="card pass"><h3>Passed</h3><p>{passes}</p></div>
+                <div class="card critical"><h3>Critical</h3><p>{critical}</p></div>
+                <div class="card high"><h3>High</h3><p>{high}</p></div>
+                <div class="card medium"><h3>Medium</h3><p>{medium}</p></div>
+                <div class="card low"><h3>Low</h3><p>{low}</p></div>
             </div>
+    """
 
-            <h2>S3 Buckets Evaluated</h2>
+    # --- IAM Users Section ---
+    html_content += """
+            <h2>IAM Users Audit</h2>
+            <table>
+                <tr><th>Username</th><th>Console Access</th><th>MFA Enabled</th><th>Active Keys</th><th>Admin Access</th></tr>
+    """
+    for user in scan_results.get("iam_users", []):
+        html_content += f"""
+                <tr>
+                    <td>{user.get('username')}</td>
+                    <td>{str(user.get('console_access'))}</td>
+                    <td>{str(user.get('mfa_enabled'))}</td>
+                    <td>{user.get('active_access_keys')}</td>
+                    <td>{str(user.get('admin_access'))}</td>
+                </tr>
+        """
+    html_content += "</table>"
+
+    # --- S3 Buckets Section ---
+    html_content += """
+            <h2>S3 Storage Security</h2>
             <table>
                 <tr><th>Bucket Name</th><th>Public</th><th>Versioning</th><th>Encryption</th><th>Logging</th></tr>
     """
-
     for bucket in scan_results.get("s3_buckets", []):
         html_content += f"""
                 <tr>
@@ -98,84 +126,45 @@ def save_html_report(scan_results, totals):
                     <td>{str(bucket.get('logging_enabled'))}</td>
                 </tr>
         """
+    html_content += "</table>"
 
+    # --- Security Groups Section ---
     html_content += """
-            </table>
-
-            <h2>IAM Users Evaluated</h2>
+            <h2>Security Groups (Inbound Risk)</h2>
             <table>
-                <tr><th>Username</th><th>Console Access</th><th>MFA Enabled</th><th>Active Keys</th><th>Admin Access</th></tr>
+                <tr><th>Security Group Name</th><th>Exposes SSH/RDP</th></tr>
     """
-
-    for user in scan_results.get("iam_users", []):
+    for sg in scan_results.get("security_groups", []):
         html_content += f"""
-                <tr>
-                    <td>{user.get('username')}</td>
-                    <td>{str(user.get('console_access'))}</td>
-                    <td>{str(user.get('mfa_enabled'))}</td>
-                    <td>{str(user.get('active_access_keys'))}</td>
-                    <td>{str(user.get('admin_access'))}</td>
-                </tr>
-        """
-
-    html_content += """
-            </table>
-
-            <h2>Security Groups Evaluated</h2>
-            <table>
-                <tr><th>Group Name</th><th>Exposes Sensitive Port (SSH/RDP)</th></tr>
-    """
-
-    sg_list = scan_results.get("security_groups", [])
-    if sg_list:
-        for sg in sg_list:
-            html_content += f"""
                 <tr>
                     <td>{sg.get('group_name')}</td>
                     <td>{str(sg.get('sensitive_port_public'))}</td>
                 </tr>
         """
-    else:
-        html_content += "<tr><td colspan='2' style='text-align: center; color: #777;'>No security groups evaluated</td></tr>"
+    html_content += "</table>"
+
+    # --- RDS Databases Section ---
+    html_content += """
+            <h2>RDS Database Instances</h2>
+            <table>
+                <tr><th>Database Identifier</th><th>Publicly Accessible</th></tr>
+    """
+    for rds in scan_results.get("rds_instances", []):
+        html_content += f"""
+                <tr>
+                    <td>{rds.get('db_identifier')}</td>
+                    <td>{str(rds.get('publicly_accessible'))}</td>
+                </tr>
+        """
+    html_content += "</table>"
 
     html_content += """
-            </table>
-
-            <h2>RDS Databases Evaluated</h2>
-            <table>
-                <tr><th>DB Identifier</th><th>Publicly Accessible</th></tr>
-    """
-
-    rds_list = scan_results.get("rds_instances", [])
-    if rds_list:
-        for rds in rds_list:
-            html_content += f"""
-                    <tr>
-                        <td>{rds.get('db_identifier')}</td>
-                        <td>{str(rds.get('publicly_accessible'))}</td>
-                    </tr>
-            """
-    else:
-        html_content += "<tr><td colspan='2' style='text-align: center; color: #777;'>No RDS databases found</td></tr>"
-
-    trail = scan_results.get("cloudtrail", {})
-    html_content += f"""
-            </table>
-
-            <h2>CloudTrail Status</h2>
-            <table>
-                <tr><th>Status</th><th>Multi-Region</th><th>Details</th></tr>
-                <tr>
-                    <td>{str(trail.get('Enabled', False))}</td>
-                    <td>{str(trail.get('MultiRegion', False))}</td>
-                    <td>{str(trail.get('Reason', 'Active and logging'))}</td>
-                </tr>
-            </table>
         </div>
     </body>
     </html>
     """
 
-    with open(html_filename, "w") as f:
+    with open(filename, "w") as f:
         f.write(html_content)
-    print(f"[INFO] HTML executive dashboard saved to {html_filename}")
+    
+    print(f"[INFO] HTML Executive Dashboard saved to: {filename}")
