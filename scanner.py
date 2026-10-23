@@ -27,6 +27,7 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 from reporter import save_scan_report, print_risk_table, save_html_report
 from utils.notifier import send_discord_alert
+from utils.db import save_scan_to_db, calculate_drift
 
 def main():
     print("\n=================================")
@@ -473,6 +474,69 @@ def main():
     
     send_discord_alert(webhook_url, scan_summary)
     print("[+] Scan complete and notification sent!")
+
+    #Security Posture Drift Sql
+    flat_findings_list = []
+    #1. S3 Buckets
+    for b in scan_results.get("s3_buckets", []):
+        name = b.get("bucket_name")
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 Public Access",
+            "status": "FAIL" if b.get("is_public") else "PASS", "severity": "CRITICAL" if b.get("is_public") else "INFO"
+        })
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 Versioning",
+            "status": "PASS" if b.get("versioning_enabled") else "FAIL", "severity": "INFO" if b.get("versioning_enabled") else "LOW"
+        })
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 Encryption", 
+            "status": "PASS" if b.get("encryption_enabled") else "FAIL", "severity": "INFO" if b.get("encryption_enabled") else "MEDIUM"
+        })
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 Logging", 
+            "status": "PASS" if b.get("logging_enabled") else "FAIL", "severity": "INFO" if b.get("logging_enabled") else "LOW"
+        })
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 Lifecycle Rules", 
+            "status": "PASS" if b.get("lifecycle_rules") else "FAIL", "severity": "INFO" if b.get("lifecycle_rules") else "LOW"
+        })
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 Policy Public", 
+            "status": "FAIL" if b.get("policy_public") else "PASS", "severity": "CRITICAL" if b.get("policy_public") else "INFO"
+        })
+        flat_findings_list.append({
+            "resource": name, "check_name": "S3 ACL Public", 
+            "status": "FAIL" if b.get("acl_public") else "PASS", "severity": "CRITICAL" if b.get("acl_public") else "INFO"
+        })
+
+    # 2. Security Groups
+    for sg in scan_results.get("security_groups", []):
+        name = sg.get("group_name")
+        flat_findings_list.append({
+            "resource": name, "check_name": "SG Sensitive Ports Public",
+            "status": "FAIL" if sg.get("sensitive_port_public") else "PASS",
+            "severity": "CRITICAL" if sg.get("sensitive_port_public") else "INFO"
+        })
+
+    # 3. RDS Instances
+    for rds in scan_results.get("rds_instances", []):
+        name = rds.get("db_identifier")
+        flat_findings_list.append({
+            "resource": name, "check_name": "RDS Publicly Accessible",
+            "status": "FAIL" if rds.get("publicly_accessible") else "PASS",
+            "severity": "CRITICAL" if rds.get("publicly_accessible") else "INFO"
+        })
+    
+    save_scan_to_db(totals_dict, flat_findings_list)
+
+    drift = calculate_drift(flat_findings_list)
+    if drift:
+        print("\n========================================")
+        print(f"{Fore.CYAN}Security Posture Drift Analysis{Style.RESET_ALL}")
+        print("========================================")
+        print(f"Newly Regressed Issues: {len(drift['regressions'])}")
+        print(f"Newly Resolved Issues: {len(drift['resolutions'])}")
+        print("========================================")
 
 if __name__ == "__main__":
     main()
