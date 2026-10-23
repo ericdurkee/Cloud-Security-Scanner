@@ -9,6 +9,16 @@ def test_s3_mock_checks():
     conn = boto3.client("s3", region_name="us-east-1")
     conn.create_bucket(Bucket="secure-test-bucket")
 
+    conn.put_public_access_block(
+        Bucket="secure-test-bucket",
+        PublicAccessBlockConfiguration={
+            'BlockPublicAcls': True,
+            'IgnorePublicAcls': True,
+            'BlockPublicPolicy': True,
+            'RestrictPublicBuckets': True
+        }
+    )
+
     buckets = list_buckets()
     assert len(buckets) == 1
     assert buckets[0]["Name"] == 'secure-test-bucket'
