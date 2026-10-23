@@ -43,7 +43,7 @@ def save_scan_report(scan_results):
         json.dump(report_data, f, indent=4)
     print(f"\n[{Fore.BLUE}INFO{Style.RESET_ALL}] Scan report successfully saved to {filename}")
 
-def save_html_report(scan_results, totals_dict, filename_prefix="reports/cloud_security_report"):
+def save_html_report(scan_results, totals_dict, compliance_scores=None, filename_prefix="reports/cloud_security_report"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{filename_prefix}_{timestamp}.html"
     
@@ -54,34 +54,161 @@ def save_html_report(scan_results, totals_dict, filename_prefix="reports/cloud_s
     medium = totals_dict.get("medium", 0)
     low = totals_dict.get("low", 0)
 
+    compliance_html = ""
+    if compliance_scores:
+        compliance_html = """
+        <div style="background: #1e293b; border: 1px solid #334155;padding: 24px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                <span style="font-size: 20px; margin-right: 8px;"></span>
+                <h3 style="margin: 0; color: #38bdf8; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">Regulatory Compliance Posture</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+        """
+        for framework, data in compliance_scores.items():
+            score = data["score"]
+            passed = data["passed"]
+            total = data["total"]
+            color = "#22c55e" if score >= 80 else "#eab308" if score >= 50 else "#ef4444"
+            
+            compliance_html += f"""
+                <div style="background: #0f172a; border: 1px solid #1e293b; padding: 18px; border-radius: 8px; border-left: 4px solid {color};">
+                    <div style="font-size: 13px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">{framework}</div>
+                    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                        <div style="font-size: 28px; font-weight: 700; color: {color};">{score}%</div>
+                        <div style="font-size: 12px; color: #64748b;">{passed}/{total} Controls</div>
+                    </div>
+                </div>
+            """
+        compliance_html += """
+            </div>
+        </div>
+        """
+
     html_content = f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
         <title>Cloud Security Executive Dashboard</title>
         <style>
-            body {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}
-            .container {{ max-width: 1100px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
-            h1 {{ color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }}
-            h2 {{ color: #34495e; margin-top: 30px; }}
-            .summary-cards {{ display: flex; gap: 15px; margin-bottom: 30px; }}
-            .card {{ flex: 1; background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border-left: 5px solid #bdc3c7; }}
-            .card.pass {{ border-left-color: #2ecc71; }}
-            .card.critical {{ border-left-color: #e74c3c; }}
-            .card.high {{ border-left-color: #d35400; }}
-            .card.medium {{ border-left-color: #f1c40f; }}
-            .card.low {{ border-left-color: #3498db; }}
-            .card h3 {{ margin: 0; font-size: 14px; color: #7f8c8d; }}
-            .card p {{ margin: 10px 0 0 0; font-size: 24px; font-weight: bold; color: #2c3e50; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }}
-            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; font-size: 14px; }}
-            th {{ background-color: #f8f9fa; color: #2c3e50; }}
+            :root {{
+                --bg-main: #0b0f19;
+                --bg-card: #1e293b;
+                --bg-table: #0f172a;
+                --border-color: #334155;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+            }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background-color: var(--bg-main);
+                color: var(--text-main);
+                margin: 0;
+                padding: 40px 20px;
+                line-height: 1.5;
+            }}
+            .container {{
+                max-width: 1200px;
+                margin: auto;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                padding: 40px;
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }}
+            .header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }}
+            h1 {{ margin: 0; color: #f8fafc; font-size: 26px; font-weight: 700; }}
+            .timestamp {{ color: var(--text-muted); font-size: 13px; margin-top: 6px; }}
+            
+            .summary-cards {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 15px;
+                margin-bottom: 30px;
+            }}
+            .card {{
+                background: var(--bg-table);
+                border: 1px solid var(--border-color);
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }}
+            .card::before {{
+                content: '';
+                position: absolute;
+                top: 0; left: 0; width: 4px; height: 100%;
+            }}
+            .card.pass::before {{ background: #22c55e; }}
+            .card.critical::before {{ background: #ef4444; }}
+            .card.high::before {{ background: #f97316; }}
+            .card.medium::before {{ background: #eab308; }}
+            .card.low::before {{ background: #38bdf8; }}
+            
+            .card h3 {{ margin: 0; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }}
+            .card p {{ margin: 10px 0 0 0; font-size: 28px; font-weight: 700; color: #f8fafc; }}
+
+            h2 {{ color: #38bdf8; font-size: 18px; font-weight: 600; margin-top: 40px; margin-bottom: 15px; border-left: 3px solid #38bdf8; padding-left: 10px; }}
+            
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                background: var(--bg-table);
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid var(--border-color);
+                margin-bottom: 20px;
+            }}
+            th, td {{
+                padding: 14px 18px;
+                text-align: left;
+                border-bottom: 1px solid var(--border-color);
+                font-size: 13.5px;
+            }}
+            th {{
+                background-color: #111827;
+                color: #cbd5e1;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 11px;
+                letter-spacing: 0.8px;
+            }}
+            tr:last-child td {{ border-bottom: none; }}
+            tr:hover {{ background-color: rgba(255, 255, 255, 0.02); }}
+            
+            .badge {{
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+            }}
+            .badge.pass {{ background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }}
+            .badge.fail {{ background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>Cloud Security Executive Dashboard</h1>
-            <p>Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            <div class="header">
+                <div>
+                    <h1>Cloud Security Executive Dashboard</h1>
+                    <div class="timestamp">Automated Infrastructure Assessment & Compliance Report</div>
+                </div>
+                <div class="timestamp" style="text-align: right;">
+                    Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}
+                </div>
+            </div>
+            
+            {compliance_html}
             
             <div class="summary-cards">
                 <div class="card pass"><h3>Passed</h3><p>{passes}</p></div>

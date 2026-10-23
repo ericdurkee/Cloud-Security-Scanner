@@ -28,6 +28,7 @@ init(autoreset=True)
 from reporter import save_scan_report, print_risk_table, save_html_report
 from utils.notifier import send_discord_alert
 from utils.db import save_scan_to_db, calculate_drift
+from utils.compliance import evaluate_compliance
 
 def main():
     print("\n=================================")
@@ -453,29 +454,7 @@ def main():
         "medium": medium_fails,
         "low": low_fails
     }
-    
-    save_scan_report(scan_results)
-    print_risk_table(total_passes, critical_fails, high_fails, medium_fails, low_fails, total_info, len(target_regions))
-    save_html_report(scan_results, totals_dict)
 
-    total_checks_count = total_passes + critical_fails + high_fails + medium_fails + low_fails
-    
-    scan_summary = {
-        "total": total_checks_count,
-        "passed": total_passes,
-        "critical": critical_fails,
-        "high": high_fails,
-        "medium": medium_fails,
-        "low": low_fails
-    }
-
-    #Discord alert
-    webhook_url = os.getenv("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/1563240654765826211/L5sKAKAJScwFFYwXQ9LwWz6rr4Qg7WBloFriRbjyIByCfMIi43j5kCBom1DbhGILZ60K")
-    
-    send_discord_alert(webhook_url, scan_summary)
-    print("[+] Scan complete and notification sent!")
-
-    #Security Posture Drift Sql
     flat_findings_list = []
     #1. S3 Buckets
     for b in scan_results.get("s3_buckets", []):
@@ -526,7 +505,8 @@ def main():
             "status": "FAIL" if rds.get("publicly_accessible") else "PASS",
             "severity": "CRITICAL" if rds.get("publicly_accessible") else "INFO"
         })
-    
+
+    compliance_scores = evaluate_compliance(flat_findings_list)
     save_scan_to_db(totals_dict, flat_findings_list)
 
     drift = calculate_drift(flat_findings_list)
@@ -537,6 +517,25 @@ def main():
         print(f"Newly Regressed Issues: {len(drift['regressions'])}")
         print(f"Newly Resolved Issues: {len(drift['resolutions'])}")
         print("========================================")
+
+    save_scan_report(scan_results)
+    print_risk_table(total_passes, critical_fails, high_fails, medium_fails, low_fails, total_info, len(target_regions))
+    save_html_report(scan_results, totals_dict, compliance_scores)
+
+    total_checks_count = total_passes + critical_fails + high_fails + medium_fails + low_fails
+    
+    scan_summary = {
+        "total": total_checks_count,
+        "passed": total_passes,
+        "critical": critical_fails,
+        "high": high_fails,
+        "medium": medium_fails,
+        "low": low_fails
+    }
+    #Discord alert
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/1563240654765826211/L5sKAKAJScwFFYwXQ9LwWz6rr4Qg7WBloFriRbjyIByCfMIi43j5kCBom1DbhGILZ60K")
+    send_discord_alert(webhook_url, scan_summary)
+    print("[+] Scan complete and notification sent!")
 
 if __name__ == "__main__":
     main()
